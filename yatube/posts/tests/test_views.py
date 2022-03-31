@@ -58,7 +58,7 @@ class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='noauthor')
+        cls.user = User.objects.create_user(username='author')
         cls.group = Group.objects.create(
             title='Тестовый тайтл',
             slug='test-slug',
@@ -83,9 +83,8 @@ class PaginatorViewsTest(TestCase):
     def test_first_page_contains_ten_records_in_index(self):
         """Первая страница в index содержит 10 постов"""
         response = self.author_client.get(reverse('posts:index'))
-        lenght = int(len(response.context['page_obj']))
         self.assertEqual(
-            lenght, settings.AMOUNT_POSTS)
+            len(response.context['page_obj']), settings.AMOUNT_POSTS)
 
     def test_second_page_contains_three_records_in_index(self):
         """Вторая страница в index содержит 3 поста"""
