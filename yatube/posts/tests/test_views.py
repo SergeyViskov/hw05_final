@@ -79,14 +79,11 @@ class PaginatorViewsTest(TestCase):
     def test_first_page_contains_ten_records(self):
         """Первая страница должна содержать 10 записей."""
         posts_per_page_template = {
-            reverse('posts:index'):
-            settings.AMOUNT_POSTS,
+            reverse('posts:index'): settings.AMOUNT_POSTS,
             reverse('posts:group_posts',
-                    kwargs={'slug': self.group.slug}):
-                    settings.AMOUNT_POSTS,
+                    kwargs={'slug': self.group.slug}): settings.AMOUNT_POSTS,
             reverse('posts:profile',
-                    kwargs={'username': self.user}):
-                    settings.AMOUNT_POSTS,
+                    kwargs={'username': self.user}): settings.AMOUNT_POSTS,
         }
         for reverse_name, count in posts_per_page_template.items():
             with self.subTest(reverse_name=reverse_name):
@@ -95,15 +92,13 @@ class PaginatorViewsTest(TestCase):
 
     def test_second_page_contains_three_records(self):
         """Вторая страница должна содержать 3 записи."""
+        three_posts = Post.objects.count() % settings.AMOUNT_POSTS
         posts_per_page_template = {
-            reverse('posts:index'):
-            Post.objects.count() % settings.AMOUNT_POSTS,
+            reverse('posts:index'): three_posts,
             reverse('posts:group_posts',
-                    kwargs={'slug': self.group.slug}):
-                    Post.objects.count() % settings.AMOUNT_POSTS,
+                    kwargs={'slug': self.group.slug}): three_posts,
             reverse('posts:profile',
-                    kwargs={'username': self.user}):
-                    Post.objects.count() % settings.AMOUNT_POSTS,
+                    kwargs={'username': self.user}): three_posts,
         }
         for reverse_name, count in posts_per_page_template.items():
             with self.subTest(reverse_name=reverse_name):
