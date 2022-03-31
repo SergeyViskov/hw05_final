@@ -255,7 +255,7 @@ class PostImageExistTest(TestCase):
                 test_object = response.context['page_obj'][0]
                 post_image = test_object.image
                 self.assertEqual(post_image, 'posts/small.gif')
-    
+
     def test_add_comment_authorized_user(self):
         """
         Добавление комментария к посту авторизованным пользователем.
