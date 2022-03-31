@@ -58,61 +58,59 @@ class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='IvanIvanov')
+        cls.user = User.objects.create_user(username='author')
         cls.group = Group.objects.create(
-            title='Тестовая группа',
-            slug='test-slug-group',
-            description='Тестовое описание группы',
+            title='Тестовый тайтл',
+            slug='test-slug',
+            description='Тестовое описание',
         )
-        arr_posts = [
-            Post(
+        for numbers in range(1, 14):
+            cls.post = Post.objects.create(
                 author=cls.user,
+                text=f'Тестовый текст {numbers}',
                 group=cls.group,
-                text=f'Пост {i}',
             )
-            for i in range(1, 14)
-        ]
-        Post.objects.bulk_create(arr_posts)
 
     def setUp(self):
-        self.authorized_client = Client()
-        self.authorized_client.force_login(PaginatorViewsTest.user)
+        self.author_client = Client()
+        self.author_client.force_login(self.user)
 
-    def test_first_page_contains_ten_records(self):
-        list_address = [
-            reverse('posts:index'),
-            reverse(
-                'posts:group_posts',
-                kwargs={'slug': PaginatorViewsTest.group.slug}
-            ),
-            reverse(
-                'posts:profile',
-                kwargs={'username': PaginatorViewsTest.user.username}
-            ),
-        ]
-        for address in list_address:
-            response = self.authorized_client.get(address)
-            self.assertEqual(
-                len(response.context['page_obj']), settings.AMOUNT_POSTS,
-                f'{response.context}'
-            )
+        self.pages_names = {
+            'posts:group_posts': self.group.slug,
+            'posts:profile': self.user.username,
+        }
 
-    def test_second_page_contains_three_records(self):
-        list_address = [
-            reverse('posts:index'),
-            reverse(
-                'posts:group_posts',
-                kwargs={'slug': PaginatorViewsTest.group.slug}),
-            reverse(
-                'posts:profile',
-                kwargs={'username': PaginatorViewsTest.user.username}),
-        ]
-        for address in list_address:
-            response = self.authorized_client.get(address + '?page=2')
-            self.assertEqual(
-                len(response.context['page_obj']),
-                Post.objects.count() % settings.AMOUNT_POSTS
-            )
+    def test_first_page_contains_ten_records_in_index(self):
+        """Первая страница в index содержит 10 постов"""
+        response = self.author_client.get(reverse('posts:index'))
+        self.assertEqual(
+            len(response.context['page_obj']), settings.AMOUNT_POSTS)
+
+    def test_second_page_contains_three_records_in_index(self):
+        """Вторая страница в index содержит 3 поста"""
+        second_page = Post.objects.count() % settings.AMOUNT_POSTS
+        response = self.author_client.get(reverse('posts:index') + '?page=2')
+        self.assertEqual(len(
+            response.context['page_obj']), second_page)
+
+    def test_first_page_contains_ten_records_in_group_and_profile(self):
+        """Первая страница в group и profile содержит 10 постов"""
+        for adress, args in self.pages_names.items():
+            with self.subTest(adress=adress):
+                response = self.author_client.get(
+                    reverse(adress, args=[args]))
+                self.assertEqual(len(
+                    response.context['page_obj']), settings.AMOUNT_POSTS)
+
+    def test_second_page_contains_three_records_in_group_and_profile(self):
+        """Вторая страница в group и profile содержит 3 поста"""
+        second_page = Post.objects.count() % settings.AMOUNT_POSTS
+        for adress, args in self.pages_names.items():
+            with self.subTest(adress=adress):
+                response = self.author_client.get(
+                    reverse(adress, args=[args]) + '?page=2')
+                self.assertEqual(len(
+                    response.context['page_obj']), second_page)
 
 
 class PostContextTests(TestCase):
