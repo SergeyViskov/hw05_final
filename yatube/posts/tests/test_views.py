@@ -74,6 +74,7 @@ class PaginatorViewsTest(TestCase):
     def setUp(self):
         self.author_client = Client()
         self.author_client.force_login(self.user)
+        cache.clear()
 
         self.pages_names = {
             'posts:group_posts': self.group.slug,
