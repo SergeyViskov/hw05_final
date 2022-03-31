@@ -65,7 +65,7 @@ class PaginatorViewsTest(TestCase):
             description='Тестовое описание',
         )
         for numbers in range(1, 14):
-            cls.post = Post.objects.create(
+            Post.objects.create(
                 author=cls.user,
                 text=f'Тестовый текст {numbers}',
                 group=cls.group,
@@ -84,7 +84,7 @@ class PaginatorViewsTest(TestCase):
         """Первая страница в index содержит 10 постов"""
         response = self.author_client.get(reverse('posts:index'))
         self.assertEqual(
-            int(len(response.context['page_obj'])), int(settings.AMOUNT_POSTS))
+            len(response.context.get('page_obj')), settings.AMOUNT_POSTS)
 
     def test_second_page_contains_three_records_in_index(self):
         """Вторая страница в index содержит 3 поста"""
