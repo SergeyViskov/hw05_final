@@ -55,62 +55,62 @@ class PostPagesTests(TestCase):
 
 
 class PaginatorViewsTest(TestCase):
+    """Тестируем паджинатор."""
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='author')
+        cls.user = User.objects.create_user(username='auth')
         cls.group = Group.objects.create(
-            title='Тестовый тайтл',
+            title='title',
             slug='test-slug',
-            description='Тестовое описание',
+            description='description',
         )
-        for numbers in range(1, 14):
-            cls.post = Post.objects.create(
+        for i in range(1, 14):
+            Post.objects.create(
                 author=cls.user,
-                text=f'Тестовый текст {numbers}',
-                group=cls.group,
+                text=f'Number of post - {i}',
+                group=cls.group
             )
 
     def setUp(self):
-        self.author_client = Client()
-        self.author_client.force_login(self.user)
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
 
-        self.pages_names = {
-            'posts:group_posts': self.group.slug,
-            'posts:profile': self.user.username,
+    def test_first_page_contains_ten_records(self):
+        """Первая страница должна содержать 10 записей."""
+        posts_per_page_template = {
+            reverse('posts:index'):
+            settings.AMOUNT_POSTS,
+            reverse('posts:group_posts',
+                    kwargs={'slug': self.group.slug}):
+                    settings.AMOUNT_POSTS,
+            reverse('posts:profile',
+                    kwargs={'username': self.user}):
+                    settings.AMOUNT_POSTS,
         }
+        for reverse_name, count in posts_per_page_template.items():
+            with self.subTest(reverse_name=reverse_name):
+                response = self.authorized_client.get(reverse_name)
+                self.assertEqual(len(response.context['page_obj']), count)
 
-    def test_first_page_contains_ten_records_in_index(self):
-        """Первая страница в index содержит 10 постов"""
-        response = self.author_client.get(reverse('posts:index'))
-        self.assertEqual(
-            len(response.context['page_obj']), settings.AMOUNT_POSTS)
-
-    def test_second_page_contains_three_records_in_index(self):
-        """Вторая страница в index содержит 3 поста"""
-        second_page = Post.objects.count() % settings.AMOUNT_POSTS
-        response = self.author_client.get(reverse('posts:index') + '?page=2')
-        self.assertEqual(len(
-            response.context['page_obj']), second_page)
-
-    def test_first_page_contains_ten_records_in_group_and_profile(self):
-        """Первая страница в group и profile содержит 10 постов"""
-        for adress, args in self.pages_names.items():
-            with self.subTest(adress=adress):
-                response = self.author_client.get(
-                    reverse(adress, args=[args]))
-                self.assertEqual(len(
-                    response.context['page_obj']), settings.AMOUNT_POSTS)
-
-    def test_second_page_contains_three_records_in_group_and_profile(self):
-        """Вторая страница в group и profile содержит 3 поста"""
-        second_page = Post.objects.count() % settings.AMOUNT_POSTS
-        for adress, args in self.pages_names.items():
-            with self.subTest(adress=adress):
-                response = self.author_client.get(
-                    reverse(adress, args=[args]) + '?page=2')
-                self.assertEqual(len(
-                    response.context['page_obj']), second_page)
+    def test_second_page_contains_three_records(self):
+        """Вторая страница должна содержать 3 записи."""
+        posts_per_page_template = {
+            reverse('posts:index'):
+            Post.objects.count() % settings.AMOUNT_POSTS,
+            reverse('posts:group_posts',
+                    kwargs={'slug': self.group.slug}):
+                    Post.objects.count() % settings.AMOUNT_POSTS,
+            reverse('posts:profile',
+                    kwargs={'username': self.user}):
+                    Post.objects.count() % settings.AMOUNT_POSTS,
+        }
+        for reverse_name, count in posts_per_page_template.items():
+            with self.subTest(reverse_name=reverse_name):
+                response = self.authorized_client.get(
+                    reverse_name + '?page=2'
+                )
+                self.assertEqual(len(response.context['page_obj']), count)
 
 
 class PostContextTests(TestCase):
