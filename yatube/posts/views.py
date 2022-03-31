@@ -1,4 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.conf import settings
+from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
@@ -12,9 +14,12 @@ User = get_user_model()
 
 @cache_page(20, key_prefix='index_page')
 def index(request):
-    post_list = Post.objects.all()
+    posts = Post.objects.all()
+    paginator = Paginator(posts, settings.AMOUNT_POSTS)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     context = {
-        'page_obj': get_page(request, post_list),
+        'page_obj': page_obj,
     }
     return render(request, 'posts/index.html', context)
 
