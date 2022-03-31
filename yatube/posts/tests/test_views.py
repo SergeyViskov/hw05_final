@@ -83,7 +83,7 @@ class PaginatorViewsTest(TestCase):
     def test_first_page_contains_ten_records_in_index(self):
         """Первая страница в index содержит 10 постов"""
         response = self.author_client.get(reverse('posts:index'))
-        lenght = len(response.context['page_obj'])
+        lenght = int(len(response.context['page_obj']))
         self.assertEqual(
             lenght, settings.AMOUNT_POSTS)
 
