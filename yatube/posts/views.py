@@ -12,7 +12,7 @@ User = get_user_model()
 
 @cache_page(20, key_prefix='index_page')
 def index(request):
-    post_list = Post.objects.all()
+    post_list = Post.objects.select_related('author').all()
     context = {
         'page_obj': get_page(request, post_list),
     }
@@ -129,6 +129,5 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
     unfollowing = get_object_or_404(Follow, user=request.user, author=author)
-    if request.method != 'POST':
-        unfollowing.delete()
+    unfollowing.delete()
     return redirect('posts:profile', author)

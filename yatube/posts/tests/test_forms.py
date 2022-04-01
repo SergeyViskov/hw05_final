@@ -1,6 +1,5 @@
 import shutil
 import tempfile
-
 from http import HTTPStatus
 
 from django.conf import settings
@@ -78,7 +77,7 @@ class PostFormTests(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.author, self.user)
         self.assertEqual(post.group.id, form_data['group'])
-        self.assertEqual(post.image.name, 'posts/small.gif')
+        self.assertEqual(post.image.name, 'posts/' + uploaded.name)
 
     def test_create_post(self):
         """Валидная форма создает запись в Post."""
@@ -141,7 +140,6 @@ class CommentFormTests(TestCase):
         )
 
     def setUp(self):
-        self.guest_client = Client()
         self.author_client = Client()
         self.author_client.force_login(self.user)
 
@@ -149,7 +147,7 @@ class CommentFormTests(TestCase):
         """Валидная форма создает запись в Post."""
         comment_count = Comment.objects.count()
         form_data = {
-            'text': 'Тестовый комментарий',
+            'text': self.post.text
         }
         response = self.author_client.post(
             reverse('posts:add_comment', args=[self.post.id]),
@@ -159,8 +157,6 @@ class CommentFormTests(TestCase):
         self.assertRedirects(
             response, reverse('posts:post_detail', args=[self.post.id]))
         self.assertEqual(Comment.objects.count(), comment_count + 1)
-        self.assertTrue(
-            Comment.objects.filter(
-                text='Тестовый комментарий',
-            ).exists()
-        )
+        last_object = Post.objects.order_by('-id').first()
+        self.assertEqual(form_data['text'], last_object.text)
+        self.assertEqual(self.post.id, last_object.id)

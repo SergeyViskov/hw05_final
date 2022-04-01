@@ -233,7 +233,7 @@ class PostImageExistTest(TestCase):
         response = self.author_client.get(reverse('posts:index'))
         test_object = response.context['page_obj'][0]
         post_image = test_object.image
-        self.assertEqual(post_image, 'posts/small.gif')
+        self.assertEqual(post_image, self.post.image.name)
 
     def test_post_detail_image_exist(self):
         """В шаблоне post_detail картинка передается в словаре context"""
@@ -242,7 +242,7 @@ class PostImageExistTest(TestCase):
         )
         test_object = response.context['post']
         post_image = test_object.image
-        self.assertEqual(post_image, 'posts/small.gif')
+        self.assertEqual(post_image, self.post.image.name)
 
     def test_group_and_profile_image_exist(self):
         """В шаблонах group и profile картинка передается в словаре context"""
@@ -255,7 +255,7 @@ class PostImageExistTest(TestCase):
                 response = self.author_client.get(reverse(names, args=[args]))
                 test_object = response.context['page_obj'][0]
                 post_image = test_object.image
-                self.assertEqual(post_image, 'posts/small.gif')
+                self.assertEqual(post_image, self.post.image.name)
 
     def test_add_comment_authorized_user(self):
         """
@@ -283,7 +283,6 @@ class CacheTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.author = User.objects.create_user(username='author')
-        cls.author_client = Client()
         cls.post = Post.objects.create(
             author=cls.author,
             text='Тестовый текст',
@@ -292,13 +291,15 @@ class CacheTest(TestCase):
     def test_caching(self):
         """Проверка кеширования главной страницы"""
         cache.clear()
-        response = self.author_client.get(reverse('posts:index'))
+        response = self.client.get(reverse('posts:index'))
         posts_count = Post.objects.count()
-        self.post.delete
+        self.post.delete()
         self.assertEqual(len(response.context['page_obj']), posts_count)
         cache.clear()
+        response_after_clear = self.client.get(reverse('posts:index'))
         posts_count = Post.objects.count()
-        self.assertEqual(len(response.context['page_obj']), posts_count)
+        self.assertEqual(
+            len(response_after_clear.context['page_obj']), posts_count)
 
 
 class FollowViewsTest(TestCase):
@@ -345,7 +346,7 @@ class FollowViewsTest(TestCase):
             reverse(
                 'posts:profile_unfollow',
                 kwargs={'username': self.post_follower}))
-        self.assertEqual(Follow.objects.count(), count_follow)
+        self.assertEqual(Follow.objects.count(), count_follow - 1)
 
     def test_follow_on_authors(self):
         """Проверка записей у тех кто подписан."""
