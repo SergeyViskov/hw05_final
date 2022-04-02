@@ -157,6 +157,6 @@ class CommentFormTests(TestCase):
         self.assertRedirects(
             response, reverse('posts:post_detail', args=[self.post.id]))
         self.assertEqual(Comment.objects.count(), comment_count + 1)
-        last_object = Post.objects.order_by('-id').first()
+        last_object = Comment.objects.order_by('-id').first()
         self.assertEqual(form_data['text'], last_object.text)
-        self.assertEqual(self.post.id, last_object.id)
+        self.assertEqual(self.comment.post.id, last_object.post.id)

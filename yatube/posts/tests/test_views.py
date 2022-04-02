@@ -225,7 +225,7 @@ class PostImageExistTest(TestCase):
         self.author_client.force_login(self.user)
 
     def test_post_with_image_exist(self):
-        self.assertTrue(Post.objects.filter(image='posts/small.gif'))
+        self.assertTrue(Post.objects.filter(image=self.post.image.name))
 
     def test_index_show_correct_image_in_context(self):
         """В Шаблоне index картинка передается в словаре context"""
